@@ -3,50 +3,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int bit;
-
-void handler1()
+int	*clientpid()
 {
-	signal(SIGUSR1, handler1);
-	bit = 0;
+	static int pid;
+	return (&pid);
 }
 
-void handler2()
+void handler(int signal, siginfo_t *si, void *data)
 {
-	signal(SIGUSR2, handler2);
-        bit = 1;
+	static char	c;
+	static int	j;
+
+	if (j == 0)
+        {
+		j = 8;
+		write(1, &c, 1);
+	}
+	j--;
+	if (*clientpid() == 0)
+		*clientpid() = si->si_pid;
+	if (signal == SIGUSR1)
+		c = c & ~(1 << j);
+	if (signal == SIGUSR2)
+		c = 1 << j | c;
+	if (j == 0 && c == 0)
+	{
+                kill(*clientpid(), SIGUSR1);
+		*clientpid() = 0;
+	}
 }
 
 int	main(void)
 {
-	int i, j;
-	char c;
+	struct sigaction act;
 
+	act.sa_sigaction = handler;
+	sigaction(SIGUSR1, &act, NULL);
+	sigaction(SIGUSR2, &act, NULL);
 	printf("PID: %d\n", getpid());
-	signal(SIGUSR1, handler1);
-	signal(SIGUSR2, handler2);
-	
-	j = 7;
-	i = 0;
 	while(1)
-	{
 		pause();
-		if (bit == 1)
-			c = 1 << j | c;
-		if (bit == 0)
-			c = c & ~(1 << j);
-		//printf("%d", bit);
-		if (j == 0)
-		{
-			i = 7;
-               // 	while (i >= 0)
-		//		printf("%d", (c >> i--) & 1);
-		//	printf("\n");
-			printf("%c",  c);
-			fflush(stdout);
-			j = 8;
-		}
-		j--;
-	}
-	return (0);
 }
