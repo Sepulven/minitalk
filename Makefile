@@ -6,7 +6,7 @@
 #    By: asepulve <asepulve@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/12/23 15:01:23 by asepulve          #+#    #+#              #
-#    Updated: 2023/01/02 20:36:35 by asepulve         ###   ########.fr        #
+#    Updated: 2023/01/05 16:59:29 by asepulve         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,21 +26,20 @@ all: server client
 bonus:  server client
 
 libft:
-		make -C ./libft
+		@make -C ./libft
 
 server: libft server.o
-		${CC} ${CFLAGS} server.o ${LIBFT} -o server
-		./server
+		@${CC} ${CFLAGS} server.o ${LIBFT} -o server
 
 client: libft client.o
-		${CC} ${CFLAGS} client.o ${LIBFT} -o client
+		@${CC} ${CFLAGS} client.o ${LIBFT} -o client
 
 clean:
-		${RM} server.o client.o
-		make clean -C ./libft
+		@${RM} server.o client.o
+		@make clean -C ./libft
 fclean: clean
-		make fclean -C ./libft
-		${RM} client server
+		@make fclean -C ./libft
+		@${RM} client server
 re: fclean ${NAME}
 
 .PHONY: all $(NAME) clean fclean client server re libft

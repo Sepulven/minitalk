@@ -6,7 +6,7 @@
 /*   By: asepulve <asepulve@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:13:36 by asepulve          #+#    #+#             */
-/*   Updated: 2023/01/03 17:36:12 by asepulve         ###   ########.fr       */
+/*   Updated: 2023/01/05 17:41:38 by asepulve         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,15 @@
 #include <unistd.h>
 #include "./libft/libft.h"
 
-static int	isstralnum(char *str)
-{
-	int	i;
+static void	sendmessage(size_t pid, char *msg);
+static void	handler(int signal, siginfo_t *si, void *data);
+static void	sendlength(int pid, char *str);
+static void	error(char *msg);
 
-	i = 0;
-	while (str[i])
-	{
-		if (!ft_isalnum(str[i]))
-			return (0);
-		i++;
-	}
-	return (1);
+static void	error(char *msg)
+{
+	write(2, msg, ft_strlen(msg));
+	exit(EXIT_FAILURE);
 }
 
 static void	sendlength(int pid, char *str)
@@ -39,9 +36,15 @@ static void	sendlength(int pid, char *str)
 	while (j >= 0)
 	{
 		if (((len >> j--) & 1) == 0)
-			kill(pid, SIGUSR1);
+		{
+			if (kill(pid, SIGUSR1) == -1)
+				error("Wrong pid\n");
+		}
 		else
-			kill(pid, SIGUSR2);
+		{
+			if (kill(pid, SIGUSR2) == -1)
+				error("Wrong pid\n");
+		}
 		usleep(500);
 	}
 }
@@ -52,38 +55,50 @@ static void	handler(int signal, siginfo_t *si, void *data)
 	(void)data;
 	if (signal == SIGUSR1)
 		return ;
-	write(1, "Message sent successfully! 👩‍🦰", 39);
+	write(1, "Message sent! 🦞", 19);
 	exit(EXIT_SUCCESS);
+}
+
+static void	sendmessage(size_t pid, char *msg)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	while (msg[i])
+	{
+		j = 7;
+		while (j >= 0)
+		{
+			if (((msg[i] >> j--) & 1) == 0)
+			{
+				if (kill(pid, SIGUSR1) == -1)
+					error("Wrong pid\n");
+			}
+			else
+			{
+				if (kill(pid, SIGUSR2) == -1)
+					error("Wrong pid\n");
+			}
+			usleep(500);
+		}
+		i++;
+	}
 }
 
 int	main(int argc, char *argv[])
 {
 	int					pid;
-	int					i;
-	int					j;
 	struct sigaction	act;
 
 	(void)argc;
-	i = 0;
 	if (!argv[2] || !argv[1] ||!isstralnum(argv[1]))
-		return (0);
+		error("Arguments not valid!");
+	pid = ft_atoi(argv[1]);
 	act.sa_sigaction = handler;
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGUSR1, &act, NULL);
 	sigaction(SIGUSR2, &act, NULL);
-	pid = ft_atoi(argv[1]);
 	sendlength(pid, argv[2]);
-	while (argv[2][i])
-	{
-		j = 7;
-		while (j >= 0)
-		{
-			if (((argv[2][i] >> j--) & 1) == 0)
-				kill(pid, SIGUSR1);
-			else
-				kill(pid, SIGUSR2);
-			usleep(500);
-		}
-		i++;
-	}
+	sendmessage(pid, argv[2]);
 }
